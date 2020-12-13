@@ -33,11 +33,13 @@ def one_iteration(INPUT, width, height):
     next_pattern = deepcopy(INPUT)
     for i in range(1, height + 1):
         for j in range(1, width + 1):
-            # print(i, j)
+            # get all adjacent seats
             adjacent_seats = INPUT[i-1][j-1:j+2] + [INPUT[i][j-1]] + [INPUT[i][j+1]] + INPUT[i+1][j-1:j+2]
+            # change empty seats to taken if none are taken around
             if INPUT[i][j] == 'L':
                 if '#' not in adjacent_seats:
                     next_pattern[i][j] = '#'
+            # change taken seat to empty if 4 or more seats around are taken
             if INPUT[i][j] == '#':
                 if adjacent_seats.count('#') >= 4:
                     next_pattern[i][j] = 'L'
@@ -49,6 +51,7 @@ def find_seating(INPUT_raw):
     INPUT, width, height = prep_input(INPUT_raw)
 
     next_pattern = []
+    # change seating until it doen't change anymore 
     while True:
         next_pattern = one_iteration(INPUT, width, height)
         if next_pattern == INPUT:
@@ -57,7 +60,8 @@ def find_seating(INPUT_raw):
 
     return sum([i.count('#') for i in INPUT])
 
-# assert(find_seating(INPUT) == 37)
+# check example input
+assert(find_seating(INPUT) == 37)
 
 with open('11.txt', 'r') as o:
     lines = o.read().splitlines()
@@ -71,61 +75,52 @@ with open('11.txt', 'r') as o:
 # this never changes!
 
 
-# INPUT, width, height = prep_input(INPUT)
-
 def make_sight_dict(INPUT, width, height):
+    '''Creates dict with coordinates of all seats, mapping to seats in sight in 8 directions.
+    Returnd dict {(i, j): [(i, j), (i, j)]}'''
     sights = {}
     for i in range(1, height + 1):
         for j in range(1, width + 1):
             if INPUT[i][j] == '.':
                 continue
-            print(i, j)
             sights[(i, j)] = []
             # right direction:
             for x in range(j + 1, width + 1):
-                # print(i, x, INPUT[i][x])
                 if INPUT[i][x] != '.':
                     sights[(i, j)].append((i, x))
                     break
             # bottom-right direction
             for x in range(1, min(width - j, height - i) + 1):
-                # print(INPUT[i + x][j + x])
                 if INPUT[i + x][j + x] != '.':
                     sights[(i, j)].append((i + x, j + x))
                     break
             # bottom direction
             for x in range(i + 1, height + 1):
-                # print(x, j, INPUT[x][j])
                 if INPUT[x][j] != '.':
                     sights[(i, j)].append((x, j))
                     break
             # bottom-left direction
             for x in range(1, min(j, height - i) + 1):
-                # print(INPUT[i + x][j - x])
                 if INPUT[i + x][j - x] != '.':
                     sights[(i, j)].append((i + x, j - x))
                     break
             # left direction
             for x in range(1, j):
-                # print(INPUT[i][j - x])
                 if INPUT[i][j - x] != '.':
                     sights[(i, j)].append((i, j - x))
                     break
             # top-left direction
             for x in range(1, min(j, i) + 1):
-                # print(INPUT[i - x][j - x])
                 if INPUT[i - x][j - x] != '.':
                     sights[(i, j)].append((i - x, j - x))
                     break
             # top direction
             for x in range(1, i):
-                # print(INPUT[i - x][j])
                 if INPUT[i - x][j] != '.':
                     sights[(i, j)].append((i - x, j))
                     break
             # top-right direction
             for x in range(1, min(width - j, i) + 1):
-                # print(INPUT[i - x][j + x])
                 if INPUT[i - x][j + x] != '.':
                     sights[(i, j)].append((i - x, j + x))
                     break
@@ -136,9 +131,10 @@ def one_iteration_sight(INPUT, width, height, sights):
     next_pattern = deepcopy(INPUT)
     for i in range(1, height + 1):
         for j in range(1, width + 1):
+            # skip spaces with just floor
             if INPUT[i][j] == '.':
                 continue
-            # print(i, j)
+            # get seats in sight from coordinates in dictionary
             seats_in_sight = [INPUT[sight[0]][sight[1]]
                                 for sight in sights[(i, j)]]
             if INPUT[i][j] == 'L':
